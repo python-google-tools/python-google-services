@@ -1,0 +1,3 @@
+[submodule "lib/googlepy"]
+	path = lib/googlepy
+	url = git@github.com:ThanuMahee12/python-google-services.git
