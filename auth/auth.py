@@ -11,7 +11,7 @@ SERVICE_KEY_FILE = os.getenv("SERVICE_KEY_FILE", "")
 SCOPES = get_scopes()
 
 
-def get_client_service_account(service_key_file: str = SERVICE_KEY_FILE, scopes: list = SCOPES):
+def _get_credntials_from_service_account(service_key_file: str = SERVICE_KEY_FILE, scopes: list = SCOPES):
     if not SCOPES or len(SCOPES) == 0:
         raise ValueError("GOOGLE_SCOPES environment variable must be set and contain at least one scope.")
     if not service_key_file or not os.path.isfile(service_key_file):
@@ -21,9 +21,13 @@ def get_client_service_account(service_key_file: str = SERVICE_KEY_FILE, scopes:
         service_key_file,
         scopes=scopes,
     )
-    client = gspread.authorize(credentials)
 
+
+    return credentials
+
+def get_client():
+    credentials = _get_credntials_from_service_account()
+    client = gspread.authorize(credentials)
     # Check connectivity - will raise an exception if auth/network fails
     client.list_spreadsheet_files()
-    return client, credentials
-
+    return client
