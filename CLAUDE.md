@@ -15,6 +15,8 @@ caching, or persistence — those belong in the consuming applications
 ```
 auth/       # credential construction (service account, OAuth), scope resolution
 config/     # scope + secret configuration (env.toml, env.py)
+sheet/      # Google Sheets access helpers
+tests/      # submodule → python-google-tools/tests-python-google-services
 __init__.py
 ```
 
@@ -26,6 +28,46 @@ __init__.py
   at call sites.
 - Public functions return authorized clients/credentials — callers decide how to
   use them.
+
+## ⚠️ MANDATORY: test-driven development (TDD)
+
+**This project follows a test-driven architecture. Write the test first, watch
+it fail, then write the code that makes it pass.** No production code is added or
+changed without a test that covers it.
+
+Tests live in a dedicated submodule:
+
+```
+tests/  →  git@github.com:python-google-tools/tests-python-google-services.git
+```
+
+### The TDD cycle (Red → Green → Refactor)
+
+1. **Red** — add/extend a test in `tests/` that expresses the desired behavior;
+   run it and confirm it **fails** for the right reason.
+2. **Green** — write the minimum code in this repo to make the test pass.
+3. **Refactor** — clean up code and tests while keeping the suite green.
+
+### Rules
+
+- Every public function/class in `auth/`, `config/`, `sheet/` has tests in
+  `tests/`.
+- A change is **not complete** until the full suite passes: `pytest`.
+- Bug fixes start with a **failing regression test** that reproduces the bug.
+- External Google APIs are **mocked** in unit tests — no live network calls in
+  the default suite (keeps it fast, deterministic, and credential-free).
+- Since `tests/` is a submodule (a separate repo), commit and push **both** this
+  repo and `tests/` when a change spans them:
+
+  ```bash
+  # tests submodule first
+  cd tests && git add -A && git commit -m "test: <behavior>" && git push origin main && cd ..
+  # then the library (records the new tests pointer)
+  git add -A && git commit -m "feat: <change>" && git push origin main
+  ```
+
+- Update the submodule pointer in this repo so the library always references the
+  matching test revision.
 
 ## ⚠️ MANDATORY: keep the wiki in sync with every change
 

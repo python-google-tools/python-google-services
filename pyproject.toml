@@ -6,6 +6,7 @@ requires-python = ">=3.9"
 dependencies = [
     "gspread",
     "google-auth",
+    "google-auth-oauthlib",
     "python-dotenv",
 ]
 
