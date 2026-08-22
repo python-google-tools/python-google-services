@@ -25,13 +25,29 @@ DEFAULT_SCOPES = [
 ]
 
 
-def get_scopes(scopes=None):
-    """Resolve scopes: explicit ``scopes`` > ``GOOGLE_SCOPES`` env > defaults."""
+def get_scopes(scopes=None, config_path=None):
+    """Resolve scopes in priority order.
+
+    explicit ``scopes`` arg > ``GOOGLE_SCOPES`` env > ``config/env.toml``
+    ``[google].scopes`` > :data:`DEFAULT_SCOPES` (last-resort safety net).
+
+    :param config_path: optional override for the TOML config location.
+    """
     if scopes:
         return list(scopes)
+
     env = os.getenv("GOOGLE_SCOPES", "")
     parsed = [s.strip() for s in env.split(",") if s.strip()]
-    return parsed or list(DEFAULT_SCOPES)
+    if parsed:
+        return parsed
+
+    from config import config_scopes
+
+    from_toml = config_scopes(config_path)
+    if from_toml:
+        return from_toml
+
+    return list(DEFAULT_SCOPES)
 
 
 def service_account_provider(key_file=None, scopes=None):
@@ -44,11 +60,11 @@ def service_account_provider(key_file=None, scopes=None):
     :param scopes: iterable of scopes; resolved via :func:`get_scopes`.
     """
     key_file = key_file or os.getenv("SERVICE_KEY_FILE", "")
-    resolved_scopes = get_scopes(scopes)
 
     def provider():
         from google.oauth2 import service_account
 
+        resolved_scopes = get_scopes(scopes)
         if not resolved_scopes:
             raise ValueError(
                 "At least one scope is required (set GOOGLE_SCOPES or pass scopes)."
@@ -80,13 +96,13 @@ def oauth_provider(client_secret_file=None, scopes=None, token_file="token.json"
     client_secret_file = client_secret_file or os.getenv(
         "CLIENT_SECRET_FILE", "client_secret.json"
     )
-    resolved_scopes = get_scopes(scopes)
 
     def provider():
         from google.auth.transport.requests import Request
         from google.oauth2.credentials import Credentials
         from google_auth_oauthlib.flow import InstalledAppFlow
 
+        resolved_scopes = get_scopes(scopes)
         if not resolved_scopes:
             raise ValueError(
                 "At least one scope is required (set GOOGLE_SCOPES or pass scopes)."
