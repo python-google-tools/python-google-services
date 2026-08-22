@@ -1,8 +1,8 @@
 """Configuration loading for googlepy.
 
-The canonical defaults (scopes, OAuth secret file) live in ``env.toml`` next to
-this module. These helpers read it so defaults are managed in one place rather
-than hardcoded across the codebase.
+The canonical defaults (scopes, OAuth secret/token files) live in
+``default.toml`` next to this module. These helpers read it so defaults are
+managed in one place rather than hardcoded across the codebase.
 """
 
 from pathlib import Path
@@ -12,7 +12,7 @@ try:  # Python 3.11+
 except ModuleNotFoundError:  # Python 3.9 / 3.10
     import tomli as tomllib
 
-DEFAULT_CONFIG_PATH = Path(__file__).with_name("env.toml")
+DEFAULT_CONFIG_PATH = Path(__file__).with_name("default.toml")
 
 
 def load_config(path=None):
@@ -32,3 +32,8 @@ def config_scopes(path=None):
 def config_secret_file(path=None):
     """Return ``[google].secret_file`` from config (``None`` if unset)."""
     return load_config(path).get("google", {}).get("secret_file")
+
+
+def config_token_file(path=None):
+    """Return ``[google].token_file`` from config (``None`` if unset)."""
+    return load_config(path).get("google", {}).get("token_file")
