@@ -23,8 +23,4 @@ scopes = [
     "https://www.googleapis.com/auth/drive.photos.readonly",
 ]
 
-# Default filename for the OAuth client-secret JSON (user-consent flow).
-secret_file = "client_secret.json"
 
-# Default filename where the OAuth user token is cached after first consent.
-token_file = "token.json"
