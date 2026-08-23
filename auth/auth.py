@@ -17,6 +17,8 @@ import os
 
 from dotenv import load_dotenv
 
+from model.auth import ApiKeyAuth
+
 load_dotenv()
 
 DEFAULT_SCOPES = [
@@ -176,3 +178,17 @@ def client_factory(credentials_provider, *, verify=False):
 def get_client():
     """Legacy helper: verified, service-account ``gspread`` client from env."""
     return client_factory(service_account_provider(), verify=True)()
+
+def get_client_with_api_key(api_key: str):
+    """Return a gspread client authenticated with a Google API key.
+
+    The ``api_key`` is validated via :class:`model.auth.ApiKeyAuth` (trimmed,
+    must be non-empty) before use.
+
+    :param api_key: the Google API key to authenticate with.
+    """
+    validated = ApiKeyAuth(api_key=api_key)
+
+    import gspread
+
+    return gspread.api_key(validated.api_key)
