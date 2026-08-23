@@ -17,7 +17,7 @@ import os
 
 from dotenv import load_dotenv
 
-from model.auth import ApiKeyAuth
+from model.pydantic.auth import ApiKeyAuth
 
 load_dotenv()
 
