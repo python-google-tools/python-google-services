@@ -1,7 +1,7 @@
 [project]
 name = "googlepy"
-version = "0.1.0"
-description = "Google API Python module"
+version = "0.2.0"
+description = "Reusable, framework-agnostic Google API service utilities for Python"
 requires-python = ">=3.9"
 dependencies = [
     "gspread",
@@ -9,7 +9,15 @@ dependencies = [
     "google-auth-oauthlib",
     "pydantic",
     "python-dotenv",
+    "requests",
     "tomli; python_version < '3.11'",
+]
+
+[project.optional-dependencies]
+docs = [
+    "mkdocs-material",
+    "mkdocstrings[python]",
+    "pylint",            # provides `pyreverse` for auto-generated UML
 ]
 
 [build-system]
@@ -17,4 +25,4 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/client", "src/config", "src/sheet"]
+packages = ["src/googlepy", "src/client", "src/config", "src/sheet"]

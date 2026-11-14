@@ -77,3 +77,7 @@ dmypy.json
 # Ruff
 .ruff_cache/
 google_service_*.json
+test_file.txt
+token*.json
+client_secret*.json
+service_key*.json
