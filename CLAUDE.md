@@ -222,3 +222,9 @@ Pick the type that matches what the change actually does:
 
 A single change may produce multiple commits (e.g. `test:` in the submodule,
 `feat:` in the library, `docs:` for the `docs/` site) — each typed correctly.
+
+### Commit message rules
+
+- **Do not add a `Co-Authored-By:` trailer** (or any AI/tool attribution) to
+  commit messages. Keep messages to the Conventional Commit subject and body
+  only.
