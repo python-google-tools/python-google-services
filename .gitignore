@@ -74,6 +74,9 @@ dmypy.json
 # UV
 .uv/
 
+# MkDocs build output
+site/
+
 # Ruff
 .ruff_cache/
 google_service_*.json
