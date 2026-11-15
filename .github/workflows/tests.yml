@@ -15,7 +15,9 @@ concurrency:
 
 jobs:
   test:
-    runs-on: ubuntu-latest
+    # Pinned to 22.04: ubuntu-latest (26.04) no longer ships the EOL Python 3.9
+    # we support as the floor (requires-python >= 3.9). 22.04 provides 3.9-3.13.
+    runs-on: ubuntu-22.04
     strategy:
       fail-fast: false
       matrix:
