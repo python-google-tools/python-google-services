@@ -6,13 +6,39 @@ Google credential objects — the caller decides how to use them.
 
 | Mode | Use when | Entry point |
 |------|----------|-------------|
-| **Service account** | Server-to-server, no user interaction | `build_service_account_credentials` |
+| **Service account** | Server-to-server, no user interaction | `service_account_credentials_from_env` / `build_service_account_credentials` |
 | **OAuth 2.0** | Acting on behalf of an end user (consent) | `build_oauth_credentials` |
 | **API key** | Public, read-only endpoints | `api_key_provider` |
 
 ## Service account
 
 Server-to-server auth using a downloaded JSON key.
+
+### From `.env` (recommended)
+
+Keep the key file out of code and point to it from the environment. Set the path
+once in `.env`:
+
+```dotenv
+# .env
+SERVICE_KEY_FILE=./service_key.json
+```
+
+Then load credentials with no file argument — the path is read from
+`SERVICE_KEY_FILE` (or `GOOGLE_APPLICATION_CREDENTIALS`):
+
+```python
+from googlepy import service_account_credentials_from_env
+
+creds = service_account_credentials_from_env(service="sheets")
+```
+
+`service_account_credentials_from_env` is a thin, intent-revealing wrapper over
+`build_service_account_credentials` that takes no file/info arguments, so the
+`.env`-driven source is unambiguous at the call site. It raises `ValueError` if
+no key file is configured or the configured file does not exist.
+
+### Explicit file or parsed JSON
 
 ```python
 from googlepy import build_service_account_credentials
@@ -30,6 +56,8 @@ creds = build_service_account_credentials(key_info=key_dict, service="drive")
 Obtain a key from the Google Cloud Console → *IAM & Admin* → *Service Accounts* →
 *Keys* → *Add key* → *JSON*. Point `SERVICE_KEY_FILE` (or
 `GOOGLE_APPLICATION_CREDENTIALS`) at the file, or pass `key_file`/`key_info`.
+The file itself should never be committed — the repo's `.gitignore` already
+excludes `service_key*.json`.
 
 ## OAuth 2.0 (user consent)
 

@@ -6,6 +6,7 @@ from googlepy.auth.provider import (
     client_factory,
     get_scopes,
     oauth_provider,
+    service_account_credentials_from_env,
     service_account_provider,
 )
 from googlepy.auth.scopes import (
@@ -33,6 +34,7 @@ __all__ = [
     "resolve_scopes",
     "get_scopes",
     "build_service_account_credentials",
+    "service_account_credentials_from_env",
     "build_oauth_credentials",
     "service_account_provider",
     "oauth_provider",
