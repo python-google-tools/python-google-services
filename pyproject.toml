@@ -20,6 +20,7 @@ test = [
 docs = [
     "mkdocs-material",
     "mkdocstrings[python]",
+    "ruff",              # formats API-reference signatures (separate_signature)
     "pylint",            # provides `pyreverse` for auto-generated UML
 ]
 
