@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import os
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional
 from pydantic import BaseModel, field_validator
 
 
@@ -23,12 +23,12 @@ class ApiKeyAuth(BaseModel):
 class ServiceAccountAuth(BaseModel):
     """Validation model for service account key authentication."""
 
-    key_file: str | None = None
-    key_info: dict[str, Any] | None = None
+    key_file: Optional[str] = None
+    key_info: Optional[dict[str, Any]] = None
 
     @field_validator("key_file")
     @classmethod
-    def _validate_file_path(cls, value: str | None) -> str | None:
+    def _validate_file_path(cls, value: Optional[str]) -> Optional[str]:
         if value is not None:
             value = value.strip()
             if not value:
