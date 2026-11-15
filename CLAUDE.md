@@ -228,3 +228,6 @@ A single change may produce multiple commits (e.g. `test:` in the submodule,
 - **Do not add a `Co-Authored-By:` trailer** (or any AI/tool attribution) to
   commit messages. Keep messages to the Conventional Commit subject and body
   only.
+- **Do not add a `🤖 Generated with [Claude Code](...)` line** (or any similar
+  AI/tool attribution) to commit messages *or* pull request descriptions. Keep
+  them to the human-authored content only.
