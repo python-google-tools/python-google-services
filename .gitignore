@@ -84,3 +84,5 @@ test_file.txt
 token*.json
 client_secret*.json
 service_key*.json
+# roborev snapshots
+/.roborev/
