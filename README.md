@@ -266,8 +266,9 @@ clean_scopes = pipe(
 
 This project enforces strict **Test-Driven Development (TDD)**. All unit tests mock external Google APIs, ensuring fast, deterministic, credential-free verification.
 
-Run the test suite:
+Install the test dependencies (once), then run the suite:
 ```bash
+pip install -e ".[test]"   # or: uv pip install -e ".[test]"
 pytest -v
 ```
 
