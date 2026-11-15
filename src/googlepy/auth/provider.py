@@ -57,6 +57,36 @@ def build_service_account_credentials(
     )
 
 
+def service_account_credentials_from_env(
+    scopes: Iterable[str] | None = None,
+    service: str | None = None,
+) -> service_account.Credentials:
+    """Build service-account credentials from the ``.env``-configured key file.
+
+    Convenience entry point for the common case where the service-account JSON
+    key path lives in the environment. The path is read from ``SERVICE_KEY_FILE``
+    (or ``GOOGLE_APPLICATION_CREDENTIALS``) via :data:`GOOGLE_SERVICE_KEY_FILE`;
+    scopes are resolved explicit > per-service default > global default.
+
+    This is a thin, intent-revealing wrapper over
+    :func:`build_service_account_credentials` that takes no file/info arguments,
+    so the ``.env``-driven source is unambiguous at the call site.
+
+    Args:
+        scopes: Explicit scopes; overrides any service/global defaults.
+        service: Service name (e.g. ``"sheets"``) whose default scopes to use
+            when ``scopes`` is not given.
+
+    Returns:
+        Authorized ``service_account.Credentials``.
+
+    Raises:
+        ValueError: If no key file is configured in the environment or the
+            configured file does not exist, or if no scopes resolve.
+    """
+    return build_service_account_credentials(scopes=scopes, service=service)
+
+
 def build_oauth_credentials(
     client_secret_file: str | Path | None = None,
     scopes: Iterable[str] | None = None,
