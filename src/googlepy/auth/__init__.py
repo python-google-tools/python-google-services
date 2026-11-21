@@ -1,9 +1,11 @@
 from googlepy.auth.models import ApiKeyAuth, OAuthAuth, ServiceAccountAuth
 from googlepy.auth.provider import (
+    AuthKind,
     api_key_provider,
     build_oauth_credentials,
     build_service_account_credentials,
     client_factory,
+    credentials_from_env,
     get_scopes,
     oauth_provider,
     service_account_credentials_from_env,
@@ -24,6 +26,7 @@ __all__ = [
     "ApiKeyAuth",
     "ServiceAccountAuth",
     "OAuthAuth",
+    "AuthKind",
     "DEFAULT_SCOPES",
     "SHEETS_SCOPES",
     "DRIVE_SCOPES",
@@ -35,6 +38,7 @@ __all__ = [
     "get_scopes",
     "build_service_account_credentials",
     "service_account_credentials_from_env",
+    "credentials_from_env",
     "build_oauth_credentials",
     "service_account_provider",
     "oauth_provider",

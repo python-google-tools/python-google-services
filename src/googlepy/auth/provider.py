@@ -1,8 +1,9 @@
 from __future__ import annotations
 
+import enum
 import os
 from pathlib import Path
-from typing import Any, Callable, Iterable
+from typing import Any, Callable, Iterable, Literal, TypeVar, Union, overload
 
 from google.oauth2 import service_account
 from google.oauth2.credentials import Credentials
@@ -10,6 +11,25 @@ from google.oauth2.credentials import Credentials
 from googlepy.auth.models import ApiKeyAuth, OAuthAuth, ServiceAccountAuth
 from googlepy.auth.scopes import DEFAULT_SCOPES, resolve_scopes
 from googlepy.config.env import CLIENT_SECRET_FILE, GOOGLE_API_KEY, GOOGLE_SERVICE_KEY_FILE, TOKEN_FILE
+
+# Credentials returned by the env-driven dispatcher: OAuth/service-account
+# credential objects, or a bare API-key string.
+AnyCredentials = Union[service_account.Credentials, Credentials, str]
+
+#: Type variable for the client object produced by :func:`client_factory`.
+T = TypeVar("T")
+
+
+class AuthKind(str, enum.Enum):
+    """Supported credential sources for :func:`credentials_from_env`.
+
+    Subclasses ``str`` so members compare equal to their string values and can
+    be passed either as ``AuthKind.SERVICE_ACCOUNT`` or ``"service_account"``.
+    """
+
+    SERVICE_ACCOUNT = "service_account"
+    OAUTH = "oauth"
+    API_KEY = "api_key"
 
 
 def get_scopes(
@@ -84,7 +104,79 @@ def service_account_credentials_from_env(
         ValueError: If no key file is configured in the environment or the
             configured file does not exist, or if no scopes resolve.
     """
-    return build_service_account_credentials(scopes=scopes, service=service)
+    return credentials_from_env(AuthKind.SERVICE_ACCOUNT, scopes=scopes, service=service)
+
+
+@overload
+def credentials_from_env(
+    kind: Literal[AuthKind.SERVICE_ACCOUNT],
+    *,
+    scopes: Iterable[str] | None = ...,
+    service: str | None = ...,
+) -> service_account.Credentials: ...
+
+
+@overload
+def credentials_from_env(
+    kind: Literal[AuthKind.OAUTH],
+    *,
+    scopes: Iterable[str] | None = ...,
+    service: str | None = ...,
+) -> Credentials: ...
+
+
+@overload
+def credentials_from_env(
+    kind: Literal[AuthKind.API_KEY],
+    *,
+    scopes: Iterable[str] | None = ...,
+    service: str | None = ...,
+) -> str: ...
+
+
+def credentials_from_env(
+    kind: AuthKind | str,
+    *,
+    scopes: Iterable[str] | None = None,
+    service: str | None = None,
+) -> AnyCredentials:
+    """Build credentials of any supported kind from ``.env`` configuration.
+
+    A single generic entry point that dispatches on ``kind`` to the matching
+    builder, each sourcing its secrets from the environment (see
+    :mod:`googlepy.config.env`):
+
+    - ``SERVICE_ACCOUNT`` → key file at ``SERVICE_KEY_FILE`` /
+      ``GOOGLE_APPLICATION_CREDENTIALS``.
+    - ``OAUTH`` → client secret / token at ``CLIENT_SECRET_FILE`` /
+      ``TOKEN_FILE`` (runs the consent flow on first use).
+    - ``API_KEY`` → ``GOOGLE_API_KEY`` (returns the validated key string).
+
+    Args:
+        kind: Which credential source to use. Accepts an :class:`AuthKind`
+            member or its string value (e.g. ``"service_account"``).
+        scopes: Explicit scopes; overrides service/global defaults. Ignored for
+            ``API_KEY``.
+        service: Service name (e.g. ``"sheets"``) whose default scopes to use
+            when ``scopes`` is not given. Ignored for ``API_KEY``.
+
+    Returns:
+        ``service_account.Credentials`` for ``SERVICE_ACCOUNT``, user
+        ``Credentials`` for ``OAUTH``, or the API-key ``str`` for ``API_KEY``.
+
+    Raises:
+        ValueError: If ``kind`` is not a valid :class:`AuthKind`, or the
+            selected source is not configured in the environment.
+    """
+    resolved = AuthKind(kind)
+    builders: dict[AuthKind, Callable[[], AnyCredentials]] = {
+        AuthKind.SERVICE_ACCOUNT: lambda: build_service_account_credentials(
+            scopes=scopes, service=service
+        ),
+        AuthKind.OAUTH: lambda: build_oauth_credentials(scopes=scopes, service=service),
+        AuthKind.API_KEY: lambda: api_key_provider()(),
+    }
+    return builders[resolved]()
 
 
 def build_oauth_credentials(
@@ -189,28 +281,38 @@ def client_factory(
     credentials_provider: Callable[[], Any],
     *,
     verify: bool = False,
-) -> Callable[[], Any]:
-    """Wrap a credentials provider in a closure that returns a cached gspread client.
+    build: Callable[[Any], T] | None = None,
+) -> Callable[[], T]:
+    """Wrap a credentials provider in a closure that returns a cached client.
 
-    The client is lazily built on the first call and reused thereafter.
+    The client is lazily built on the first call and reused thereafter. Generic
+    over the client type: by default it authorizes a ``gspread`` client, but any
+    ``build`` callable mapping credentials to a client may be supplied, and the
+    returned closure is typed to that client's type.
 
     Args:
         credentials_provider: A zero-argument callable returning credentials.
-        verify: When True, performs a verification call on the first build.
+        verify: When True, performs a ``gspread`` verification call on the first
+            build. Only applies to the default ``gspread`` client.
+        build: Optional callable that turns credentials into a client. Defaults
+            to ``gspread.authorize``.
 
     Returns:
         Zero-argument closure returning the cached authorized client.
     """
-    cache: dict[str, Any] = {}
+    cache: dict[str, T] = {}
 
-    def get_client() -> Any:
+    def get_client() -> T:
         if "client" not in cache:
-            import gspread
-
             creds = credentials_provider()
-            client = gspread.authorize(creds)
-            if verify:
-                client.list_spreadsheet_files()
+            if build is None:
+                import gspread
+
+                client = gspread.authorize(creds)
+                if verify:
+                    client.list_spreadsheet_files()
+            else:
+                client = build(creds)
             cache["client"] = client
         return cache["client"]
 
